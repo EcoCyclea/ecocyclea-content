@@ -6,7 +6,10 @@ export const REPO_ROOT = path.resolve(TOOLS_DIR, '..', '..');
 
 export const CONTENT_DIR = path.join(REPO_ROOT, 'content');
 export const SCHEMAS_DIR = path.join(REPO_ROOT, 'schemas');
-export const DIST_DIR = path.join(REPO_ROOT, 'dist');
+// Dist surchargeable (FEED_DIST_DIR) pour que les tests ne écrasent pas un vrai build local
+export const DIST_DIR = process.env.FEED_DIST_DIR
+  ? path.resolve(process.env.FEED_DIST_DIR)
+  : path.join(REPO_ROOT, 'dist');
 export const DOCS_DIR = path.join(REPO_ROOT, 'docs');
 
 export const LOCALE = 'fr-FR';

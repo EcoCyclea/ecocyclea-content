@@ -2,12 +2,14 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
 import { generateKeyPairSync, createPublicKey, createPrivateKey, verify, createHash } from 'node:crypto';
-import { readFileSync, existsSync } from 'node:fs';
+import { readFileSync, existsSync, mkdtempSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import path from 'node:path';
 
 const TOOLS = path.resolve(new URL('..', import.meta.url).pathname);
 const REPO = path.resolve(TOOLS, '..');
-const DIST = path.join(REPO, 'dist');
+// Dist de test isolé : on ne touche JAMAIS au vrai dist/ du repo
+const DIST = mkdtempSync(path.join(tmpdir(), 'feed-dist-'));
 
 test('build-feed signe un manifeste vérifiable (Ed25519) avec les sha256 des contenus', () => {
   const { publicKey, privateKey } = generateKeyPairSync('ed25519');
@@ -21,7 +23,7 @@ test('build-feed signe un manifeste vérifiable (Ed25519) avec les sha256 des co
 
   execFileSync(process.execPath, ['build-feed.mjs'], {
     cwd: TOOLS,
-    env: { ...process.env, FEED_SIGNING_PRIVATE_KEY: privPem },
+    env: { ...process.env, FEED_SIGNING_PRIVATE_KEY: privPem, FEED_DIST_DIR: DIST },
     stdio: 'pipe',
   });
 
@@ -74,7 +76,7 @@ test('build-feed échoue si la validation échoue', () => {
   assert.throws(() =>
     execFileSync(process.execPath, ['build-feed.mjs'], {
       cwd: TOOLS,
-      env: { ...process.env, FEED_SIGNING_PRIVATE_KEY: '', DEV_EPHEMERAL_KEY: '' },
+      env: { ...process.env, FEED_SIGNING_PRIVATE_KEY: '', DEV_EPHEMERAL_KEY: '', FEED_DIST_DIR: DIST },
       stdio: 'pipe',
     }),
   );

@@ -5,7 +5,7 @@ category: depistage-prevention
 title: "Dépistage du cancer du col de l'utérus : ce qu'il faut savoir"
 summary: "Le dépistage du cancer du col de l'utérus repose sur un test HPV ou un frottis cervico-utérin, selon l'âge. Voici les âges concernés, la fréquence recommandée et comment se faire dépister en France."
 readingMinutes: 3
-tags: [depistage, cancer, hpv, prevention]
+tags: [depistage, cancer, hpv, prevention, suivi]
 spotlight: true
 links:
   - label: "Dépistage du cancer du col de l'utérus (25–65 ans)"

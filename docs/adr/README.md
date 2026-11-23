@@ -10,3 +10,4 @@ Date: November 22, 2026
 | [0003](0003-validation-rules-and-reading-time.md) | Règles de validation éditoriale + temps de lecture auto | Accepted |
 | [0004](0004-feed-signing-and-versioning.md) | Signature Ed25519, versionnement et rollback du flux | Accepted |
 | [0005](0005-feed-client-react-native.md) | ContentFeedClient RN : Ed25519 (@noble), cache atomique MMKV | Accepted |
+| [0006](0006-content-features-v1-decisions.md) | Décisions v1 : navigateur in-app, Markdown, worker Cloudflare, plus de marques en dur | Accepted |

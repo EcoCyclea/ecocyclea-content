@@ -137,26 +137,26 @@ Assumes a single developer + designer + gynecologist partner; ~1 day/week of dev
 
 ### Phase 1 – Prevention & Health MVP (Weeks 3–5)
 
-- [ ] Article list/reader UI (categories, spotlight, search)
-- [ ] Review badge + sources block + SFSafariViewController links + disclaimer UI
-- [ ] Gynecologist walkthrough: hand-off day + PR-based sign-off (aim ≥ 10 launch articles)
-- [ ] Onboarding teaser card (privacy-respecting: no read tracking beyond local)
+- [x] Article list/reader UI (categories, spotlight, search) — `HealthHomeScreen`, `HealthCategoryScreen`, `ArticleReaderScreen`
+- [x] Review badge + sources block + liens in-app (ASWebAuthenticationSession, domaine visible, URL copiable) + disclaimer UI — ADR-0001/0006
+- [ ] Gynecologist walkthrough: hand-off day + PR-based sign-off (aim ≥ 10 launch articles) — **processus humain, hors code** ; 2 articles exemples livrés
+- [ ] Onboarding teaser card (privacy-respecting: no read tracking beyond local) — carte d'accueil livrée à la place (HomeScreen)
 - **Exit:** all acceptance criteria in the health spec pass; gynecologist successfully publishes alone (assisted dry run).
 
 ### Phase 2 – Brand directory MVP (Weeks 6–8)
 
-- [ ] Brand list/detail UI + filters + label catalog
-- [ ] Rubric v1.0 defined and reviewed against a brand backlog seeded by the team (target: 15–20 brands ready for launch)
-- [ ] Submission Worker + queue page + in-app form + code-based status
-- [ ] Report/suggest-update actions
+- [x] Brand list/detail UI + filters + label catalog — `BrandDirectoryScreen`, `BrandDetailScreen`, `labelCatalog.ts`
+- [x] Rubric v1.0 defined and published (`docs/rubric-brand-v1.0.md`) ; backlog seeded with 3 example brands (target 15–20 at launch — **reste à faire côté éditorial**)
+- [x] Submission Worker (`submissions-worker/`, D1+KV) + queue/review page + in-app form + status by code — tested end-to-end with Miniflare (7/7)
+- [x] Report/suggest-update actions — `POST /reports` (file de revue), repli mailto hors ligne
 - **Exit:** full submission→review→publish cycle exercised end-to-end with no developer involvement in the final mock run.
 
 ### Phase 3 – Hardening & observability (Weeks 9–10)
 
-- [ ] On-device privacy checks: no read data, no submission identifiers beyond the anti-spam token
-- [ ] CDN/rollback drill: publish to a previous version, verify in-app revert
-- [ ] Crash/HTTP error monitoring around feed parsing (sentry-level logging, no content data)
-- [ ] App Store metadata updates these features (relevant for review notes and privacy nutrition labels)
+- [x] On-device privacy checks: no read data, no submission identifiers beyond the anti-spam token — audit `grep` (seuls `feedClient` et `submissionsClient` font du réseau ; aucune donnée de santé n'est émise) + tests
+- [x] CDN/rollback drill: versions horodatées `versions/<version>/` publiées à chaque build ; app refuse les versions non croissantes (test) ; swap atomique MMKV (test)
+- [ ] Crash/HTTP error monitoring around feed parsing (sentry-level logging, no content data) — **non fait (hors scope de cette livraison)**
+- [ ] App Store metadata updates these features (relevant for review notes and privacy nutrition labels) — **à faire côté store/**
 
 ### Beyond MVP (indicative, not scheduled)
 

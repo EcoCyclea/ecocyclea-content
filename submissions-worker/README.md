@@ -27,12 +27,15 @@ Rate limit : `RATE_LIMIT_PER_HOUR` (défaut 5) soumissions/heure par hash de jet
 
 ```bash
 npm ci
-wrangler login                                  # une fois
-wrangler d1 create ecocyclea-submissions        # → copier l'id dans wrangler.toml
-wrangler kv namespace create RATE_KV            # → copier l'id dans wrangler.toml
-wrangler secret put REVIEW_SECRET               # secret de la page de revue
+wrangler login                                  # une fois (ou CLOUDFLARE_API_TOKEN + CLOUDFLARE_ACCOUNT_ID)
+wrangler d1 create ecocyclea-submissions        # → copier l'uuid dans wrangler.toml (déjà fait : f5a7529f-…)
+wrangler kv namespace create RATE_KV            # → copier l'id dans wrangler.toml (déjà fait : 1073caba…)
+echo "<secret>" | wrangler secret put REVIEW_SECRET   # secret de la page de revue (à conserver dans un gestionnaire de mots de passe)
 npx wrangler d1 migrations apply ecocyclea-submissions --remote
-npx wrangler deploy                             # → https://submissions.ecocyclea.fr (route custom)
+npx wrangler deploy
+# → déployé sur https://ecocyclea-submissions.ecocyclea.workers.dev
+# Pour submissions.ecocyclea.fr : CNAME chez le registrar DNS pointant vers
+# ecocyclea-submissions.ecocyclea.workers.dev (le domaine n'étant pas une zone Cloudflare).
 ```
 
 CI : `.github/workflows/deploy-worker.yml` (test Miniflare puis déploiement sur push main,

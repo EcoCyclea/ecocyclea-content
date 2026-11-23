@@ -7,13 +7,13 @@ compatibility_date = "2026-11-21"
 [[d1_databases]]
 binding = "DB"
 database_name = "ecocyclea-submissions"
-database_id = "REMPLACER_PAR_L_ID_D1"   # `wrangler d1 create ecocyclea-submissions`
+database_id = "f5a7529f-750f-4950-a846-d033f39dc7b5"
 migrations_dir = "migrations"
 
 # Rate limiting par jeton d'appareil (hashé)
 [[kv_namespaces]]
 binding = "RATE_KV"
-id = "REMPLACER_PAR_L_ID_KV"           # `wrangler kv namespace create RATE_KV`
+id = "1073caba7ce44456a577abeee67ca1da"
 
 [vars]
 GITHUB_REPO = "ecocyclea/ecocyclea-content"

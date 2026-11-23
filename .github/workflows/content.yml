@@ -1,0 +1,143 @@
+name: content-ci
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'content/**'
+      - 'schemas/**'
+      - 'tools/**'
+      - 'templates/**'
+      - 'docs/**'
+      - '.github/workflows/content.yml'
+  pull_request:
+    paths:
+      - 'content/**'
+      - 'schemas/**'
+      - 'tools/**'
+      - 'templates/**'
+      - 'docs/**'
+      - '.github/workflows/content.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: content-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    name: Valider le contenu
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: tools/package-lock.json
+      - name: Installer les outils
+        run: cd tools && npm ci
+      - name: Valider frontmatter + marques (JSON Schema + règles éditoriales)
+        run: cd tools && node validate.mjs
+      - name: Contrôler les docs (métadonnées + liens internes)
+        run: cd tools && node check-docs.mjs
+      - name: Tests des outils
+        run: cd tools && npm test
+
+  staleness:
+    name: Rapport de péremption (> 12 mois)
+    needs: validate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: tools/package-lock.json
+      - run: cd tools && npm ci
+      - name: Générer le rapport dans le résumé du job
+        run: |
+          echo "### Rapport de péremption" >> "$GITHUB_STEP_SUMMARY"
+          cd tools && node staleness.mjs
+
+  build:
+    name: Construire + signer le flux
+    needs: validate
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.meta.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: tools/package-lock.json
+      - run: cd tools && npm ci
+      - name: Build avec clé éphémère (pull request — test du pipeline sans secret)
+        if: github.event_name == 'pull_request'
+        run: cd tools && DEV_EPHEMERAL_KEY=1 node build-feed.mjs
+      - name: Build signé (push sur main — secret FEED_SIGNING_PRIVATE_KEY)
+        if: github.event_name != 'pull_request'
+        env:
+          FEED_SIGNING_PRIVATE_KEY: ${{ secrets.FEED_SIGNING_PRIVATE_KEY }}
+        run: cd tools && node build-feed.mjs
+      - name: Lire la version du manifeste
+        id: meta
+        run: echo "version=$(node -p "require('./dist/manifest.fr-FR.json').version")" >> "$GITHUB_OUTPUT"
+      - name: Vérifier la signature du manifeste (clé publique du build)
+        if: github.event_name != 'pull_request'
+        run: cd tools && node verify-dist.mjs
+      - uses: actions/upload-artifact@v4
+        with:
+          name: feed-dist
+          path: dist/
+          retention-days: 7
+
+  publish:
+    name: Publier sur le stockage CDN (S3-compatible)
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: build
+    runs-on: ubuntu-latest
+    env:
+      S3_ENDPOINT: ${{ secrets.S3_ENDPOINT }}        # ex. https://s3.<region>.cloudflarestorage.com ou OVH
+      S3_BUCKET: ${{ secrets.S3_BUCKET }}            # ex. ecocyclea-feeds
+      S3_ACCESS_KEY_ID: ${{ secrets.S3_ACCESS_KEY_ID }}
+      S3_SECRET_ACCESS_KEY: ${{ secrets.S3_SECRET_ACCESS_KEY }}
+      CDN_BASE_URL: ${{ secrets.CDN_BASE_URL }}      # ex. https://cdn.ecocyclea.fr
+      VERSION: ${{ needs.build.outputs.version }}
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: feed-dist
+          path: dist/
+      - name: Installer aws cli
+        run: pip install --quiet awscli
+      - name: Publier latest/ (cache court) + versions/<version>/ (immutable, rollback)
+        run: |
+          aws configure set aws_access_key_id "$S3_ACCESS_KEY_ID"
+          aws configure set aws_secret_access_key "$S3_SECRET_ACCESS_KEY"
+          EP="--endpoint-url=$S3_ENDPOINT"
+          LOCALE=fr-FR
+          PREFIX="feeds/$LOCALE"
+          for f in dist/manifest.$LOCALE.json dist/articles.$LOCALE.json dist/brands.$LOCALE.json; do
+            base=$(basename "$f")
+            aws s3 cp "$f" "s3://$S3_BUCKET/$PREFIX/latest/$base" $EP \
+              --content-type application/json --cache-control 'public, max-age=300'
+            aws s3 cp "$f" "s3://$S3_BUCKET/$PREFIX/versions/$VERSION/$base" $EP \
+              --content-type application/json --cache-control 'public, max-age=31536000, immutable'
+          done
+          # le manifeste versionné pointe vers les URL versionnées
+          aws s3 cp "dist/versions/$VERSION/manifest.$LOCALE.json" "s3://$S3_BUCKET/$PREFIX/versions/$VERSION/manifest.$LOCALE.json" $EP \
+            --content-type application/json --cache-control 'public, max-age=31536000, immutable'
+          echo "✅ Publié: $CDN_BASE_URL/$PREFIX/latest/ et …/versions/$VERSION/"
+      - name: Purger le cache CDN (optionnel, si CLOUDFLARE_API_TOKEN renseigné)
+        if: ${{ secrets.CLOUDFLARE_API_TOKEN != '' }}
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ZONE_ID: ${{ secrets.CLOUDFLARE_ZONE_ID }}
+        run: node tools/purge-cdn.mjs

@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ecocyclea.fr/schemas/manifest.schema.json",
+  "title": "Ecocyclea — manifeste du flux de contenu (signé)",
+  "type": "object",
+  "required": ["version", "generatedAt", "locale", "signatureAlgorithm", "signature", "payload"],
+  "additionalProperties": false,
+  "properties": {
+    "version": { "type": "string", "format": "date-time" },
+    "generatedAt": { "type": "string", "format": "date-time" },
+    "locale": { "type": "string", "pattern": "^[a-z]{2}-[A-Z]{2}$" },
+    "signatureAlgorithm": { "const": "ed25519" },
+    "signature": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{128}$",
+      "description": "Signature Ed25519 détachée (hex, 64 octets) du JSON canonique de `payload`."
+    },
+    "payload": {
+      "type": "object",
+      "required": ["version", "files"],
+      "additionalProperties": false,
+      "properties": {
+        "version": { "type": "string", "format": "date-time" },
+        "files": {
+          "type": "object",
+          "minProperties": 1,
+          "patternProperties": {
+            "^[a-z-]+\\.fr-FR\\.json$": {
+              "type": "object",
+              "required": ["url", "sha256"],
+              "additionalProperties": false,
+              "properties": {
+                "url": { "type": "string", "format": "uri" },
+                "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+              }
+            }
+          },
+          "additionalProperties": false
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Ecocyclea — catalogue des labels (source de vérité des id de labels)",
+  "type": "object",
+  "required": ["version", "labels"],
+  "additionalProperties": false,
+  "properties": {
+    "version": { "type": "string", "pattern": "^\\d+\\.\\d+$" },
+    "labels": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "required": ["id", "displayName", "tooltip"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "type": "string", "pattern": "^[a-z0-9-]+$" },
+          "displayName": { "type": "string", "minLength": 2, "maxLength": 60 },
+          "tooltip": { "type": "string", "minLength": 10, "maxLength": 300 }
+        }
+      }
+    }
+  },
+  "labels": [
+    {
+      "id": "made-in-france",
+      "displayName": "Fabriqué en France",
+      "tooltip": "Produit conçu et/ou fabriqué dans des ateliers situés en France, vérifié lors de la revue."
+    },
+    {
+      "id": "gots",
+      "displayName": "GOTS — coton bio certifié",
+      "tooltip": "Global Organic Textile Standard : certification de la filière textile biologique, de la fibre au produit fini."
+    },
+    {
+      "id": "oeko-tex",
+      "displayName": "OEKO-TEX®",
+      "tooltip": "Label indépendant contrôlant l'absence de substances nocives dans les textiles (Standard 100)."
+    },
+    {
+      "id": "ecocert",
+      "displayName": "Ecocert",
+      "tooltip": "Certification indépendante de produits cosmétiques et biologiques (Ecocert Cosmos, etc.)."
+    },
+    {
+      "id": "b-corp",
+      "displayName": "B Corp",
+      "tooltip": "Certification internationale des entreprises répondant à des exigences sociales et environnementales strictes."
+    },
+    {
+      "id": "vegan",
+      "displayName": "Vegan",
+      "tooltip": "Aucun ingrédient d'origine animale ; la certification doit être documentée lors de la revue."
+    }
+  ]
+}

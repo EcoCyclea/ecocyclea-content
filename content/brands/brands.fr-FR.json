@@ -1,0 +1,70 @@
+{
+  "rubricVersion": "1.0",
+  "brands": [
+    {
+      "id": "brand-0001",
+      "name": "Dans Ma Culotte",
+      "slug": "dans-ma-culotte",
+      "tagline": "Culottes menstruelles en coton bio, cousues en France",
+      "description": "Culottes menstruelles en coton bio certifié GOTS, conçues et cousues dans des ateliers français, avec une composition transparente et des modèles pensés pour durer plusieurs années.",
+      "categories": ["culottes-menstruelles"],
+      "labels": ["made-in-france", "gots", "oeko-tex"],
+      "sustainabilityHighlights": [
+        "Coton bio certifié GOTS",
+        "Conception et couture en ateliers français",
+        "Emballage sans plastique, recyclable"
+      ],
+      "score": 84,
+      "rubricVersion": "1.0",
+      "url": "https://dansmaculotte.com",
+      "instagram": "@dansmaculotte",
+      "priceRange": "€€",
+      "reviewedBy": "Équipe Ecocyclea",
+      "reviewedAt": "2026-11-18",
+      "regions": ["fr-FR"]
+    },
+    {
+      "id": "brand-0002",
+      "name": "La Cup",
+      "slug": "la-cup",
+      "tagline": "La coupe menstruelle fabriquée en France",
+      "description": "Coupe menstruelle en silicone médical de grade alimentaire, fabriquée en France, livrée avec sa pochette en coton bio. Un investissement initial faible pour des années d'utilisation.",
+      "categories": ["coupe-menstruelle"],
+      "labels": ["made-in-france"],
+      "sustainabilityHighlights": [
+        "Fabrication en France",
+        "Silicone médical certifié, sans perturbateur endocrinien",
+        "Jusqu'à 10 ans d'utilisation : zéro déchet sur la durée"
+      ],
+      "score": 78,
+      "rubricVersion": "1.0",
+      "url": "https://lacup.fr",
+      "instagram": "@lacup.fr",
+      "priceRange": "€",
+      "reviewedBy": "Équipe Ecocyclea",
+      "reviewedAt": "2026-11-18",
+      "regions": ["fr-FR"]
+    },
+    {
+      "id": "brand-0003",
+      "name": "Natracare",
+      "slug": "natracare",
+      "tagline": "Tampons et serviettes en coton bio certifié",
+      "description": "Serviettes et tampons en coton bio certifié GOTS, sans chlore ni parfum, avec applicateur en carton. Disponibles en France dans les magasins bio et certaines pharmacies.",
+      "categories": ["tampons-serviettes-bio"],
+      "labels": ["gots", "vegan", "ecocert"],
+      "sustainabilityHighlights": [
+        "Coton bio certifié GOTS, sans chlore ni parfum",
+        "Emballages compostables ou recyclables",
+        "Engagement vegan documenté"
+      ],
+      "score": 71,
+      "rubricVersion": "1.0",
+      "url": "https://www.natracare.com/fr/",
+      "priceRange": "€€",
+      "reviewedBy": "Équipe Ecocyclea",
+      "reviewedAt": "2026-11-17",
+      "regions": ["fr-FR"]
+    }
+  ]
+}

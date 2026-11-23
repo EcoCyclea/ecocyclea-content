@@ -1,0 +1,81 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ecocyclea.fr/schemas/article.frontmatter.schema.json",
+  "title": "Ecocyclea — frontmatter d'un article de santé",
+  "type": "object",
+  "required": [
+    "id",
+    "slug",
+    "category",
+    "title",
+    "summary",
+    "spotlight",
+    "links",
+    "publishedAt",
+    "status"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "id": { "type": "string", "pattern": "^art-[0-9a-z][0-9a-z-]*$" },
+    "slug": { "type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$" },
+    "category": {
+      "enum": [
+        "mon-cycle",
+        "contraception",
+        "depistage-prevention",
+        "ist",
+        "fertilite-grossesse",
+        "menopause"
+      ]
+    },
+    "title": { "type": "string", "minLength": 10, "maxLength": 120 },
+    "summary": { "type": "string", "minLength": 40, "maxLength": 300 },
+    "readingMinutes": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 60,
+      "description": "Optionnel. S'il est présent, la CI vérifie qu'il correspond au temps calculé automatiquement (200 mots/min). Le flux publié utilise toujours la valeur calculée."
+    },
+    "tags": {
+      "type": "array",
+      "maxItems": 10,
+      "items": { "type": "string", "pattern": "^[a-z0-9-]+$" }
+    },
+    "spotlight": { "type": "boolean" },
+    "links": {
+      "type": "array",
+      "maxItems": 12,
+      "items": {
+        "type": "object",
+        "required": ["label", "url", "source", "description"],
+        "additionalProperties": false,
+        "properties": {
+          "label": { "type": "string", "minLength": 3, "maxLength": 80 },
+          "url": { "type": "string", "format": "uri", "maxLength": 500 },
+          "source": { "type": "string", "minLength": 2, "maxLength": 80 },
+          "description": { "type": "string", "minLength": 10, "maxLength": 200 }
+        }
+      }
+    },
+    "validatedBy": { "type": "string", "minLength": 2, "maxLength": 80 },
+    "validatedByTitle": { "type": "string", "minLength": 2, "maxLength": 80 },
+    "validatedAt": { "type": "string", "format": "date" },
+    "publishedAt": { "type": "string", "format": "date" },
+    "status": { "enum": ["draft", "published", "retracted"] }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "status": { "const": "published" } } },
+      "then": {
+        "required": ["validatedBy", "validatedByTitle", "validatedAt"],
+        "properties": { "links": { "minItems": 1 } }
+      }
+    },
+    {
+      "if": { "properties": { "status": { "const": "retracted" } } },
+      "then": {
+        "not": { "required": ["validatedBy"] }
+      }
+    }
+  ]
+}

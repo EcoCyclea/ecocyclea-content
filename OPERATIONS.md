@@ -80,8 +80,9 @@ Astuce : le template intégré « Edit Cloudflare Workers » couvre Workers/KV/D
 > - Worker déployé : `https://ecocyclea-submissions.ecocyclea.workers.dev` (subdomain workers.dev `ecocyclea`) — `submissions.ecocyclea.fr` = CNAME chez le registrar vers cette URL
 > - D1 `ecocyclea-submissions` uuid `f5a7529f-750f-4950-a846-d033f39dc7b5` · KV `RATE_KV` id `1073caba7ce44456a577abeee67ca1da`
 > - R2 bucket `ecocyclea-feeds` (S3 endpoint `https://<account_id>.r2.cloudflarestorage.com`), flux publié sous `feeds/fr-FR/latest/` + `feeds/fr-FR/versions/<version>/`
+> - **CDN public du flux** : `https://pub-4ed0896b10b246d3b0edc068869d7a69.r2.dev` → `CDN_BASE_URL` (secret CI) et `FEED_BASE_URL` de l'app = `…/feeds/fr-FR/latest`. Vérifié de bout en bout le 2026-11-23 : manifeste 200 + ETag, signature Ed25519 valide (clé épinglée), If-None-Match → 304, sha256 OK. Option : CNAME `cdn.ecocyclea.fr` → `pub-….r2.dev` chez le registrar.
 > - Page de revue : `https://ecocyclea-submissions.ecocyclea.workers.dev/review?secret=<REVIEW_SECRET>`
-> - **Reste à faire côté dashboard** : bucket → Settings → Public access → « Allow Access » (donne l'URL `https://pub-….r2.dev` à mettre dans `CDN_BASE_URL` et `FEED_BASE_URL` de l'app), et bucket → Settings → CORS (GET depuis `*`).
+> - **Reste à faire côté dashboard** : bucket → Settings → CORS (GET depuis `*`), uniquement pour un aperçu web.
 
 | Workflow | Secrets |
 | --- | --- |

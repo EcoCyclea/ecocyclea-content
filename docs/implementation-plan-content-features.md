@@ -132,7 +132,7 @@ Assumes a single developer + designer + gynecologist partner; ~1 day/week of dev
 - [x] Create the `ecocyclea-content` repo; move this `docs/` folder into it (see [doc-maintenance.md](doc-maintenance.md)) and set up docs CI checks
 - [x] Content repo scaffold, Markdown templates, JSON Schemas
 - [x] CI: validation + signed feed build + CDN upload/purge
-- [ ] iOS `ContentFeedClient` (fetch, verify signature, cache, offline fallback) + debug screen
+- [x] `ContentFeedClient` (fetch + ETag/If-None-Match, vérification Ed25519 avec clé épinglée avant remplacement du cache, cache MMKV chiffré avec swap atomique, fallback hors-ligne sur le dernier bon cache) — voir [ADR-0005](adr/0005-feed-client-react-native.md), code dans `ecocyclea/src/data/content/`, tests dans `__tests__/contentFeed.test.ts`
 - **Exit:** a test article edited in the repo appears in-app < 10 min later, no release.
 
 ### Phase 1 – Prevention & Health MVP (Weeks 3–5)

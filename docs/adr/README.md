@@ -9,3 +9,4 @@ Date: November 22, 2026
 | [0002](0002-docs-canonical-in-content-repo.md) | Docs canoniques dans le dépôt `ecocyclea-content` | Accepted |
 | [0003](0003-validation-rules-and-reading-time.md) | Règles de validation éditoriale + temps de lecture auto | Accepted |
 | [0004](0004-feed-signing-and-versioning.md) | Signature Ed25519, versionnement et rollback du flux | Accepted |
+| [0005](0005-feed-client-react-native.md) | ContentFeedClient RN : Ed25519 (@noble), cache atomique MMKV | Accepted |

@@ -75,6 +75,14 @@ Astuce : le template intégré « Edit Cloudflare Workers » couvre Workers/KV/D
 
 ### 6.3 Secrets GitHub Actions à renseigner
 
+> **Déploiement effectué le 2026-11-23** (à ne PAS committer, valeurs sensibles en secrets uniquement) :
+> - Compte Cloudflare : `df100faad92250a10ee1d7e5567696fa` (« Dev.ecocyclea@gmail.com's Account »)
+> - Worker déployé : `https://ecocyclea-submissions.ecocyclea.workers.dev` (subdomain workers.dev `ecocyclea`) — `submissions.ecocyclea.fr` = CNAME chez le registrar vers cette URL
+> - D1 `ecocyclea-submissions` uuid `f5a7529f-750f-4950-a846-d033f39dc7b5` · KV `RATE_KV` id `1073caba7ce44456a577abeee67ca1da`
+> - R2 bucket `ecocyclea-feeds` (S3 endpoint `https://<account_id>.r2.cloudflarestorage.com`), flux publié sous `feeds/fr-FR/latest/` + `feeds/fr-FR/versions/<version>/`
+> - Page de revue : `https://ecocyclea-submissions.ecocyclea.workers.dev/review?secret=<REVIEW_SECRET>`
+> - **Reste à faire côté dashboard** : bucket → Settings → Public access → « Allow Access » (donne l'URL `https://pub-….r2.dev` à mettre dans `CDN_BASE_URL` et `FEED_BASE_URL` de l'app), et bucket → Settings → CORS (GET depuis `*`).
+
 | Workflow | Secrets |
 | --- | --- |
 | `deploy-worker.yml` | `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID` |

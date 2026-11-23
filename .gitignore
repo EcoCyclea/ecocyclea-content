@@ -4,3 +4,5 @@ dist/
 *.pem
 wrangler.toml.worker.env
 .DS_Store
+
+submissions-worker/test/.tmp/

@@ -1,0 +1,21 @@
+name = "ecocyclea-submissions"
+main = "src/index.ts"
+compatibility_date = "2026-11-21"
+
+# File de soumissions (D1) — aucune donnée personnelle : pas d'email, pas de compte,
+# seulement un hash du jeton d'appareil (anti-spam) + la soumission elle-même.
+[[d1_databases]]
+binding = "DB"
+database_name = "ecocyclea-submissions"
+database_id = "REMPLACER_PAR_L_ID_D1"   # `wrangler d1 create ecocyclea-submissions`
+migrations_dir = "migrations"
+
+# Rate limiting par jeton d'appareil (hashé)
+[[kv_namespaces]]
+binding = "RATE_KV"
+id = "REMPLACER_PAR_L_ID_KV"           # `wrangler kv namespace create RATE_KV`
+
+[vars]
+GITHUB_REPO = "ecocyclea/ecocyclea-content"
+RATE_LIMIT_PER_HOUR = 5
+# REVIEW_SECRET est un secret (`wrangler secret put REVIEW_SECRET`), jamais en clair ici.

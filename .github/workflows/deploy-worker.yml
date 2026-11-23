@@ -1,0 +1,49 @@
+name: deploy-submissions-worker
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'submissions-worker/**'
+      - '.github/workflows/deploy-worker.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Tester le worker (Miniflare)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: submissions-worker/package-lock.json
+      - run: cd submissions-worker && npm ci && npm test
+
+  deploy:
+    name: Déployer sur Cloudflare
+    needs: test
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: submissions-worker/package-lock.json
+      - run: cd submissions-worker && npm ci
+      - name: Migrations D1
+        run: cd submissions-worker && npx wrangler d1 migrations apply ecocyclea-submissions --remote
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      - name: Déploiement
+        run: cd submissions-worker && npx wrangler deploy
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}

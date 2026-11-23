@@ -48,3 +48,37 @@ prochain rafraîchissement du flux.
 Le job `staleness` de la CI liste dans le résumé du job les articles non revalidés depuis
 > 12 mois et les marques non revues depuis > 12 mois (non bloquant). Balayage éditorial :
 `npm run staleness` en local.
+
+## 6. Tokens Cloudflare (quelles policies)
+
+Deux tokens, deux rôles — jamais dans le repo, uniquement en secrets CI / `wrangler secret`.
+
+### 6.1 API token « déploiement » (custom token, compte + zone `ecocyclea.fr` uniquement)
+
+| Ressource | Permission | Pourquoi |
+| --- | --- | --- |
+| Account → Workers Scripts | Edit | `wrangler deploy`, `wrangler secret put REVIEW_SECRET` |
+| Account → D1 | Edit | `wrangler d1 create ecocyclea-submissions`, migrations |
+| Account → Workers KV Storage | Edit | `wrangler kv namespace create RATE_KV` |
+| Zone `ecocyclea.fr` → Workers Routes | Edit | attacher `submissions.ecocyclea.fr` |
+| Zone `ecocyclea.fr` → DNS | Edit | enregistrement du sous-domaine |
+| Zone `ecocyclea.fr` → Cache Purge | Purge | `tools/purge-cdn.mjs` après publication du flux |
+
+Astuce : le template intégré « Edit Cloudflare Workers » couvre Workers/KV/D1 ; ajoute les
+3 permissions zone. Mettre une expiration (ex. 90 jours) et une restriction IP si possible.
+
+### 6.2 Token R2 (upload du flux signé par la CI)
+
+*API Tokens → Create R2 API Token* : permission « Object Read & Write » **limitée au bucket
+`ecocyclea-feeds`**. Fournit `S3_ACCESS_KEY_ID` / `S3_SECRET_ACCESS_KEY` et l'endpoint
+`https://<ACCOUNT_ID>.r2.cloudflarestorage.com` (à mettre dans `S3_ENDPOINT`).
+
+### 6.3 Secrets GitHub Actions à renseigner
+
+| Workflow | Secrets |
+| --- | --- |
+| `deploy-worker.yml` | `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID` |
+| `content.yml` | `FEED_SIGNING_PRIVATE_KEY` (contenu du `.pem` de `tools/keygen.mjs`), `S3_ENDPOINT`, `S3_BUCKET`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`, `CDN_BASE_URL`, `CLOUDFLARE_API_TOKEN` + `CLOUDFLARE_ZONE_ID` (purge CDN optionnelle) |
+
+Gratuit à notre échelle : Workers Free = 100k req/jour, D1 = 5 Go + 100k écritures/jour,
+KV = 1k écritures/jour, R2 = 10 Go — voir §6 pour le détail.

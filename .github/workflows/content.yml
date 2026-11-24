@@ -10,14 +10,9 @@ on:
       - 'templates/**'
       - 'docs/**'
       - '.github/workflows/content.yml'
+  # Sur PR : toujours déclenché (sans filtre de chemins) pour que les checks
+  # requis par la protection de branche soient systématiquement exécutés.
   pull_request:
-    paths:
-      - 'content/**'
-      - 'schemas/**'
-      - 'tools/**'
-      - 'templates/**'
-      - 'docs/**'
-      - '.github/workflows/content.yml'
   workflow_dispatch:
 
 permissions:

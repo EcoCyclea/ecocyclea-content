@@ -6,6 +6,9 @@ on:
     paths:
       - 'submissions-worker/**'
       - '.github/workflows/deploy-worker.yml'
+  # Sur PR : toujours déclenché pour que le check « Tester le worker » soit
+  # requis sur toutes les PR (le job deploy reste limité au push sur main).
+  pull_request:
   workflow_dispatch:
 
 permissions:

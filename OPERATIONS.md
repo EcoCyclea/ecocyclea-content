@@ -20,6 +20,14 @@ premier, ou accepter une fenêtre où l'app garde son cache (comportement de sé
 
 Ne jamais committer `.secrets/` (voir `.gitignore`).
 
+**Clé publique actuellement épinglée (production, générée le 2026-11-24)** :
+
+```
+1d1c4d0c87911a8ab2a8cb8562d87b183ad170b275d7fe283034de887b9407c6
+```
+
+À copier telle quelle dans `src/core/config/feed.ts` → `FEED_PUBLIC_KEY_HEX` côté app iOS.
+
 ## 2. Publication manuelle (hors CI)
 
 ```bash

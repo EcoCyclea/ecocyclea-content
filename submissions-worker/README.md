@@ -57,3 +57,5 @@ URL workers.dev : `https://ecocyclea-submissions.ecocyclea.workers.dev`.
 Custom domain `submissions.ecocyclea.fr` à brancher ensuite (voir OPERATIONS.md).
 
 <!-- 2026-11-24: relance du déploiement CI après correction des permissions du token (D1/KV/Workers Scripts Edit) -->
+
+<!-- 2026-11-24 16:08: CLOUDFLARE_ACCOUNT_ID corrigé (df100…) -->

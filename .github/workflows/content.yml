@@ -86,6 +86,9 @@ jobs:
         run: echo "version=$(node -p "require('./dist/manifest.fr-FR.json').version")" >> "$GITHUB_OUTPUT"
       - name: Vérifier la signature du manifeste (clé publique du build)
         if: github.event_name != 'pull_request'
+        env:
+          # Clé publique de production (publique, épinglée dans l'app) — voir OPERATIONS.md §1
+          FEED_PUBLIC_KEY_HEX: 1d1c4d0c87911a8ab2a8cb8562d87b183ad170b275d7fe283034de887b9407c6
         run: cd tools && node verify-dist.mjs
       - uses: actions/upload-artifact@v4
         with:

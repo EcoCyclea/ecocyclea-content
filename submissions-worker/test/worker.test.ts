@@ -175,9 +175,8 @@ test('CORS preflight OK', async () => {
   assert.equal(res.headers.get('Access-Control-Allow-Origin'), '*');
 });
 
-test('prefilledPrUrl supporte GitLab (GIT_PROVIDER=gitlab)', async () => {
+test('prefilledPrUrl supporte GitLab (GIT_PROVIDER=gitlab)', async (t) => {
   const { Miniflare: MF } = await import('miniflare');
-  const path2 = await import('node:path');
   const mf2 = new MF({
     scriptPath: outfile,
     modulesRoot: outdir,
@@ -191,6 +190,8 @@ test('prefilledPrUrl supporte GitLab (GIT_PROVIDER=gitlab)', async () => {
       RATE_LIMIT_PER_HOUR: '50',
     },
   });
+  // Toujours libérer workerd, même si une assertion échoue (sinon le process hang).
+  t.after(() => mf2.dispose());
   await mf2.ready;
   const res = await mf2.dispatchFetch('http://worker.test/submissions', {
     method: 'POST',
@@ -207,6 +208,7 @@ test('prefilledPrUrl supporte GitLab (GIT_PROVIDER=gitlab)', async () => {
   const accept = await mf2.dispatchFetch(`http://worker.test/review/accept/${sub.id}?secret=test-secret`, { method: 'POST' });
   const { prUrl } = (await accept.json()) as any;
   assert.ok(prUrl.startsWith('https://gitlab.com/ecocyclea/ecocyclea-content/-/merge_requests/new?'));
-  assert.ok(decodeURIComponent(prUrl).includes('Marque GitLab'));
-  await mf2.dispose();
+  // URLSearchParams encode les espaces en '+' : decodeURIComponent seul ne suffit pas.
+  const decoded = decodeURIComponent(prUrl.replaceAll('+', ' '));
+  assert.ok(decoded.includes('Marque GitLab'), `titre MR attendu dans ${prUrl}`);
 });

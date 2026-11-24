@@ -131,7 +131,7 @@ jobs:
             --content-type application/json --cache-control 'public, max-age=31536000, immutable'
           echo "✅ Publié: $CDN_BASE_URL/$PREFIX/latest/ et …/versions/$VERSION/"
       - name: Purger le cache CDN (optionnel, si CLOUDFLARE_API_TOKEN renseigné)
-        if: ${{ secrets.CLOUDFLARE_API_TOKEN != '' }}
+        if: secrets.CLOUDFLARE_API_TOKEN != ''
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ZONE_ID: ${{ secrets.CLOUDFLARE_ZONE_ID }}

@@ -47,3 +47,11 @@ secrets `CLOUDFLARE_API_TOKEN` / `CLOUDFLARE_ACCOUNT_ID`).
 npm test        # node --test avec Miniflare (D1 + KV locaux)
 wrangler dev    # test manuel
 ```
+
+## Déploiement en CI (2026-11-24)
+
+Le déploiement est automatisé : push sur `main` touchant `submissions-worker/**` →
+`.github/workflows/deploy-worker.yml` (tests Miniflare, migrations D1, `wrangler deploy`)
+avec les secrets `CLOUDFLARE_API_TOKEN` / `CLOUDFLARE_ACCOUNT_ID`.
+URL workers.dev : `https://ecocyclea-submissions.ecocyclea.workers.dev`.
+Custom domain `submissions.ecocyclea.fr` à brancher ensuite (voir OPERATIONS.md).

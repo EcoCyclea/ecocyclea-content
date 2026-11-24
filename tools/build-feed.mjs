@@ -46,8 +46,10 @@ function main() {
     process.exit(1);
   }
 
-  const version = new Date().toISOString();
-  const generatedAt = version;
+  // Version = timestamp ISO sans les ':' (interdits dans les chemins d'artefacts CI
+  // et dans les noms de fichiers Windows) : 2026-11-24T15-22-34.144Z
+  const version = new Date().toISOString().replace(/:/g, '-');
+  const generatedAt = new Date().toISOString();
 
   // 2. Articles publiés → articles.fr-FR.json
   const articles = [];

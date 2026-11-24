@@ -31,7 +31,7 @@ export function reviewPageHtml(): string {
   <button onclick="loadQueue()">Ouvrir la file</button>
 </div>
 <div id="content" style="display:none">
-  <p class="muted">Grille : <a href="https://github.com/ecocyclea/ecocyclea-content/blob/main/docs/rubric-brand-v1.0.md">rubric-brand-v1.0.md</a> (score min. 60, preuves requises). Les rejets n’apparaissent jamais dans l’app.</p>
+  <p class="muted">Grille : <a href="https://github.com/EcoCyclea/ecocyclea-content/blob/main/docs/rubric-brand-v1.0.md">rubric-brand-v1.0.md</a> (score min. 60, preuves requises). Les rejets n’apparaissent jamais dans l’app.</p>
   <h2>Soumissions</h2>
   <table id="subs"><thead><tr><th>Code</th><th>Marque</th><th>Site (preuve)</th><th>Catégorie</th><th>Justification</th><th>Statut</th><th>Reçue le</th><th>Actions</th></tr></thead><tbody></tbody></table>
   <h2>Signalements / mises à jour</h2>

@@ -20,7 +20,10 @@ interface Env {
   DB: D1Database;
   RATE_KV: KVNamespace;
   REVIEW_SECRET?: string;
-  GITHUB_REPO: string;
+  /** Fournisseur Git du dépôt de contenu : 'github' (défaut) ou 'gitlab'. */
+  GIT_PROVIDER?: string;
+  /** URL web du dépôt de contenu, ex. https://github.com/EcoCyclea/ecocyclea-content */
+  GIT_WEB_BASE_URL?: string;
   RATE_LIMIT_PER_HOUR: string;
 }
 
@@ -129,8 +132,10 @@ function validateSubmission(body: any): string | null {
   return null;
 }
 
-/** Construit l'URL de PR GitHub préremplie qui ajoute la marque au flux. */
+/** Construit l'URL de PR/MR préremplie qui ajoute la marque au flux (GitHub ou GitLab). */
 function prefilledPrUrl(env: Env, row: { code: string; name: string; url: string; category: string; reason: string }): string {
+  const provider = env.GIT_PROVIDER || 'github';
+  const repoWeb = (env.GIT_WEB_BASE_URL || 'https://github.com/EcoCyclea/ecocyclea-content').replace(/\/+$/, '');
   const branch = `review/marque-${row.code.toLowerCase()}`;
   const brandEntry = {
     id: `brand-sub-${row.code.toLowerCase()}`,
@@ -165,12 +170,18 @@ function prefilledPrUrl(env: Env, row: { code: string; name: string; url: string
     '',
     '2. La CI valide schéma + score ≥ 60 + rubricVersion, puis publie le flux signé.',
   ].join('\n');
-  const params = new URLSearchParams({
-    expand: '1',
-    title: `Ajouter la marque « ${row.name} » à l'annuaire`,
-    body,
-  });
-  return `https://github.com/${env.GITHUB_REPO}/compare/main...${branch}?${params.toString()}`;
+  const title = `Ajouter la marque « ${row.name} » à l'annuaire`;
+  if (provider === 'gitlab') {
+    const params = new URLSearchParams({
+      'merge_request[source_branch]': branch,
+      'merge_request[target_branch]': 'main',
+      'merge_request[title]': title,
+      'merge_request[description]': body,
+    });
+    return `${repoWeb}/-/merge_requests/new?${params.toString()}`;
+  }
+  const params = new URLSearchParams({ expand: '1', title, body });
+  return `${repoWeb}/compare/main...${branch}?${params.toString()}`;
 }
 
 export default {
@@ -267,7 +278,7 @@ export default {
 <table><tr><th>Marque</th><th>Catégorie</th><th>Site</th><th>Publiée le</th></tr>
 ${published.results.map((r: any) => `<tr><td>${escapeHtml(r.name)}</td><td>${escapeHtml(r.category)}</td><td><a href="${escapeHtml(r.url)}" rel="noopener">${escapeHtml(r.url)}</a></td><td>${escapeHtml(r.updated_at.slice(0, 10))}</td></tr>`).join('')}
 </table>
-<p class="muted">Chaque marque est revue selon la <a href="https://github.com/${env.GITHUB_REPO}/blob/main/docs/rubric-brand-v1.0.md">grille de revue publiée (v1.0)</a> avant publication. Les soumissions rejetées n’apparaissent nulle part.</p>
+<p class="muted">Chaque marque est revue selon la <a href="${(env.GIT_WEB_BASE_URL || 'https://github.com/EcoCyclea/ecocyclea-content').replace(/\/+$/, '')}/-/blob/main/docs/rubric-brand-v1.0.md">grille de revue publiée (v1.0)</a> avant publication. Les soumissions rejetées n’apparaissent nulle part.</p>
 </body></html>`;
       return html(page);
     }

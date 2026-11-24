@@ -36,7 +36,8 @@ const mf = new Miniflare({
   kvNamespaces: ['RATE_KV'],
   bindings: {
     REVIEW_SECRET: 'test-secret',
-    GITHUB_REPO: 'ecocyclea/ecocyclea-content',
+    GIT_PROVIDER: 'github',
+    GIT_WEB_BASE_URL: 'https://github.com/EcoCyclea/ecocyclea-content',
     RATE_LIMIT_PER_HOUR: '3',
   },
 });
@@ -121,7 +122,7 @@ test('cycle de revue : accept → PR préremplie ; reject → jamais publié ; p
   assert.equal(acceptRes.status, 200);
   const { prUrl } = await acceptRes.json() as any;
   const prUrlDecoded = decodeURIComponent(prUrl.replace(/\+/g, ' ')); // URLSearchParams encode les espaces en '+'
-  assert.ok(prUrl.includes('github.com/ecocyclea/ecocyclea-content/compare/'));
+  assert.ok(prUrl.includes('github.com/EcoCyclea/ecocyclea-content/compare/'));
   assert.ok(prUrlDecoded.includes('content/brands/brands.fr-FR.json'));
   assert.ok(prUrlDecoded.includes('Marque Revue'));
 
@@ -172,4 +173,40 @@ test('CORS preflight OK', async () => {
   const res = await mf.dispatchFetch('http://worker.test/submissions', { method: 'OPTIONS' });
   assert.equal(res.status, 204);
   assert.equal(res.headers.get('Access-Control-Allow-Origin'), '*');
+});
+
+test('prefilledPrUrl supporte GitLab (GIT_PROVIDER=gitlab)', async () => {
+  const { Miniflare: MF } = await import('miniflare');
+  const path2 = await import('node:path');
+  const mf2 = new MF({
+    scriptPath: outfile,
+    modulesRoot: outdir,
+    modules: true,
+    d1Databases: ['DB'],
+    kvNamespaces: ['RATE_KV'],
+    bindings: {
+      REVIEW_SECRET: 'test-secret',
+      GIT_PROVIDER: 'gitlab',
+      GIT_WEB_BASE_URL: 'https://gitlab.com/ecocyclea/ecocyclea-content',
+      RATE_LIMIT_PER_HOUR: '50',
+    },
+  });
+  await mf2.ready;
+  const res = await mf2.dispatchFetch('http://worker.test/submissions', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      name: 'Marque GitLab', url: 'https://gl.fr', category: 'zero-dechet',
+      reason: 'Test du fournisseur GitLab pour la PR préremplie.',
+      antiSpamToken: 'e'.repeat(32),
+    }),
+  });
+  const { code } = (await res.json()) as any;
+  const queue = (await (await mf2.dispatchFetch('http://worker.test/review/api/queue?secret=test-secret')).json()) as any;
+  const sub = queue.submissions.find((s: any) => s.code === code);
+  const accept = await mf2.dispatchFetch(`http://worker.test/review/accept/${sub.id}?secret=test-secret`, { method: 'POST' });
+  const { prUrl } = (await accept.json()) as any;
+  assert.ok(prUrl.startsWith('https://gitlab.com/ecocyclea/ecocyclea-content/-/merge_requests/new?'));
+  assert.ok(decodeURIComponent(prUrl).includes('Marque GitLab'));
+  await mf2.dispose();
 });

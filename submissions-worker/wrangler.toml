@@ -16,6 +16,8 @@ binding = "RATE_KV"
 id = "1073caba7ce44456a577abeee67ca1da"
 
 [vars]
-GITHUB_REPO = "ecocyclea/ecocyclea-content"
+# Fournisseur Git du dépôt de contenu : "github" (défaut) ou "gitlab".
+GIT_PROVIDER = "github"
+GIT_WEB_BASE_URL = "https://github.com/EcoCyclea/ecocyclea-content"
 RATE_LIMIT_PER_HOUR = 5
 # REVIEW_SECRET est un secret (`wrangler secret put REVIEW_SECRET`), jamais en clair ici.

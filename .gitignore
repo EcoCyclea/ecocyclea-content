@@ -6,3 +6,6 @@ wrangler.toml.worker.env
 .DS_Store
 
 submissions-worker/test/.tmp/
+
+# build de test du worker
+submissions-worker/.test-build/

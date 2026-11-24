@@ -55,3 +55,5 @@ Le déploiement est automatisé : push sur `main` touchant `submissions-worker/*
 avec les secrets `CLOUDFLARE_API_TOKEN` / `CLOUDFLARE_ACCOUNT_ID`.
 URL workers.dev : `https://ecocyclea-submissions.ecocyclea.workers.dev`.
 Custom domain `submissions.ecocyclea.fr` à brancher ensuite (voir OPERATIONS.md).
+
+<!-- 2026-11-24: relance du déploiement CI après correction des permissions du token (D1/KV/Workers Scripts Edit) -->

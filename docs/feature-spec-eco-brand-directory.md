@@ -132,6 +132,13 @@ Rules:
 - In-app form → HTTPS POST to a minimal write endpoint (Cloudflare Worker or OVH API) → persisted to a private queue (e.g., a table reviewed in a simple internal page).
 - Contains no personal data; rate-limited by device (client-generated anonymous token, resettable).
 - Reviewed weekly; publish path goes through the content repo + feed update.
+- **Implémenté (2026-11-24)** : worker `submissions-worker/` (D1 + KV). La revue se fait
+  **au niveau de la PR GitHub** : la soumission ouvre automatiquement une PR (si
+  `GITHUB_TOKEN` est posé), le relecteur y complète l'entrée (score ≥ 60, grille v1.0,
+  preuves vérifiables) et merge ; un webhook resynchronise le statut de la soumission
+  (opened→accepted, merged→published, closed→rejected). Garde-fou : branch protection
+  sur `main` (PR + approbation + CI verte requises). Flux complet documenté dans
+  `submissions-worker/README.md` § « Flux de revue complet (bout en bout) ».
 
 ## 7. Compliance & Legal Notes
 

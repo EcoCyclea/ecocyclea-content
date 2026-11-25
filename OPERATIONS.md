@@ -99,3 +99,22 @@ Astuce : le template intégré « Edit Cloudflare Workers » couvre Workers/KV/D
 
 Gratuit à notre échelle : Workers Free = 100k req/jour, D1 = 5 Go + 100k écritures/jour,
 KV = 1k écritures/jour, R2 = 10 Go — voir §6 pour le détail.
+
+## 7. Revue des soumissions de marques (admin) — revue au niveau de la PR
+
+La revue se fait dans la PR GitHub : à la soumission depuis l'app, le worker crée
+automatiquement la PR (`review/marque-<code>` + entrée squelette dans
+`content/brands/brands.fr-FR.json`) si `GITHUB_TOKEN` est posé ; le relecteur complète
+l'entrée (score ≥ 60, grille v1.0, preuves vérifiables — checklist dans
+`.github/PULL_REQUEST_TEMPLATE.md`), approuve et merge ; un webhook « Pull request »
+(`POST /webhooks/github`, secret `GITHUB_WEBHOOK_SECRET`) resynchronise le statut de la
+soumission (opened→`accepted`, merged→`published`, closed→`rejected`).
+
+Pré-requis côté GitHub : branch protection sur `main` (PR obligatoire + 1 approbation +
+CI verte, pas de push direct) — sans quoi la « revue PR » n'a aucune force. Le PAT
+`GITHUB_TOKEN` reste limité à Contents: read/write (il crée des PR, il ne merge pas).
+
+Le flux complet, la configuration du webhook, la table des secrets (`REVIEW_SECRET`,
+`GITHUB_TOKEN`, `GITHUB_WEBHOOK_SECRET`) et la règle de rotation dès exposition sont
+documentés dans **`submissions-worker/README.md`**, sections « Flux de revue complet
+(bout en bout) », « Garde-fous GitHub » et « Secrets du worker ».

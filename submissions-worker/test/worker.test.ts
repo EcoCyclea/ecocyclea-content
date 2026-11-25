@@ -6,7 +6,7 @@
  */
 import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
-import { Miniflare } from 'miniflare';
+import { Miniflare, createFetchMock } from 'miniflare';
 import path from 'node:path';
 import fs from 'node:fs';
 import { createRequire } from 'node:module';
@@ -36,6 +36,7 @@ const mf = new Miniflare({
   kvNamespaces: ['RATE_KV'],
   bindings: {
     REVIEW_SECRET: 'test-secret',
+    GITHUB_WEBHOOK_SECRET: 'whsec',
     GIT_PROVIDER: 'github',
     GIT_WEB_BASE_URL: 'https://github.com/EcoCyclea/ecocyclea-content',
     RATE_LIMIT_PER_HOUR: '3',
@@ -211,4 +212,217 @@ test('prefilledPrUrl supporte GitLab (GIT_PROVIDER=gitlab)', async (t) => {
   // URLSearchParams encode les espaces en '+' : decodeURIComponent seul ne suffit pas.
   const decoded = decodeURIComponent(prUrl.replaceAll('+', ' '));
   assert.ok(decoded.includes('Marque GitLab'), `titre MR attendu dans ${prUrl}`);
+});
+
+test('accept avec GITHUB_TOKEN → la PR est créée via l’API GitHub (branche + commit + PR)', async (t) => {
+  // Mock de l'API GitHub (undici MockAgent injecté dans Miniflare)
+  const fetchMock = createFetchMock();
+  fetchMock.disableNetConnect();
+  const gh = fetchMock.get('https://api.github.com');
+  const mf3 = new Miniflare({
+    scriptPath: outfile,
+    modulesRoot: outdir,
+    modules: true,
+    d1Databases: ['DB'],
+    kvNamespaces: ['RATE_KV'],
+    fetchMock,
+    bindings: {
+      REVIEW_SECRET: 'test-secret',
+      GIT_PROVIDER: 'github',
+      GIT_WEB_BASE_URL: 'https://github.com/EcoCyclea/ecocyclea-content',
+      GITHUB_TOKEN: 'ghp_test',
+      RATE_LIMIT_PER_HOUR: '50',
+    },
+  });
+  t.after(() => mf3.dispose());
+  await mf3.ready;
+
+  const R = '/repos/EcoCyclea/ecocyclea-content';
+  // Le 1er POST /pulls échoue (500) : la soumission reste 'pending' (pas de PR auto),
+  // puis /review/accept rejoue la création de PR qui réussit cette fois.
+  gh.intercept({ path: `${R}/git/refs/heads/main`, method: 'GET' })
+    .reply(200, { object: { sha: 'main-sha' } }, { headers: { 'content-type': 'application/json' } }).persist();
+  gh.intercept({ path: `${R}/git/refs`, method: 'POST' })
+    .reply(201, { ref: 'refs/heads/review/marque-x' }, { headers: { 'content-type': 'application/json' } }).persist();
+  const brandsFile = Buffer.from(JSON.stringify({ rubricVersion: '1.0', brands: [] })).toString('base64');
+  gh.intercept({ path: new RegExp(`${R}/contents/content/brands/brands\\.fr-FR\\.json`) , method: 'GET' })
+    .reply(200, { sha: 'file-sha', content: brandsFile }, { headers: { 'content-type': 'application/json' } }).persist();
+  let putBody: any = null;
+  gh.intercept({ path: `${R}/contents/content/brands/brands.fr-FR.json`, method: 'PUT' })
+    .reply(201, async (opts) => {
+      const text = await new Response(opts.body as any).text();
+      putBody = JSON.parse(text);
+      return { content: { sha: 'new-file-sha' } };
+    }, { headers: { 'content-type': 'application/json' } }).persist();
+  gh.intercept({ path: `${R}/pulls`, method: 'POST' })
+    .reply(500, { message: 'boom' }, { headers: { 'content-type': 'application/json' } });
+  gh.intercept({ path: `${R}/pulls`, method: 'POST' })
+    .reply(201, { html_url: 'https://github.com/EcoCyclea/ecocyclea-content/pull/42' }, { headers: { 'content-type': 'application/json' } });
+
+  // Soumission (PR auto échoue → pending) puis accept (PR créée)
+  const res = await mf3.dispatchFetch('http://worker.test/submissions', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      name: 'Marque API', url: 'https://api.fr', category: 'coupe-menstruelle',
+      reason: 'Test de création de PR via l’API GitHub.',
+      antiSpamToken: 'f'.repeat(32),
+    }),
+  });
+  const { code } = (await res.json()) as any;
+  const queue = (await (await mf3.dispatchFetch('http://worker.test/review/api/queue?secret=test-secret')).json()) as any;
+  const sub = queue.submissions.find((s: any) => s.code === code);
+  const accept = await mf3.dispatchFetch(`http://worker.test/review/accept/${sub.id}?secret=test-secret`, { method: 'POST' });
+  assert.equal(accept.status, 200);
+  const body = (await accept.json()) as any;
+  assert.equal(body.prCreated, true);
+  assert.equal(body.prUrl, 'https://github.com/EcoCyclea/ecocyclea-content/pull/42');
+
+  // Le commit sur la branche contient bien l'entrée de la marque
+  assert.ok(putBody, 'PUT contents appelé');
+  assert.equal(putBody.branch, `review/marque-${code.toLowerCase()}`);
+  const committed = JSON.parse(Buffer.from(putBody.content, 'base64').toString('utf8'));
+  assert.equal(committed.brands.length, 1);
+  assert.equal(committed.brands[0].name, 'Marque API');
+  assert.equal(committed.brands[0].id, `brand-sub-${code.toLowerCase()}`);
+});
+
+function githubWebhookRequest(mfInstance: Miniflare, payload: unknown, secret = 'whsec', event = 'pull_request') {
+  return import('node:crypto').then(({ createHmac }) => {
+    const raw = JSON.stringify(payload);
+    const sig = 'sha256=' + createHmac('sha256', secret).update(raw).digest('hex');
+    return mfInstance.dispatchFetch('http://worker.test/webhooks/github', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-GitHub-Event': event,
+        'X-Hub-Signature-256': sig,
+      },
+      body: raw,
+    });
+  });
+}
+
+function prPayload(action: string, code: string, merged = false) {
+  const c = code.toLowerCase();
+  return {
+    action,
+    pull_request: {
+      html_url: `https://github.com/EcoCyclea/ecocyclea-content/pull/7`,
+      merged,
+      head: { ref: `review/marque-${c}` },
+    },
+  };
+}
+
+test('webhook GitHub : opened → accepted, merged → published, closed sans merge → rejected, mauvaise signature → 401', async () => {
+  const { createHmac } = await import('node:crypto');
+
+  // deux soumissions (sans GITHUB_TOKEN sur ce mf → restent pending)
+  const r1 = await postSubmission({ name: 'Marque WH1', url: 'https://wh1.fr' }, 'g'.repeat(32));
+  const { code: c1 } = (await r1.json()) as any;
+  const r2 = await postSubmission({ name: 'Marque WH2', url: 'https://wh2.fr' }, 'h'.repeat(32));
+  const { code: c2 } = (await r2.json()) as any;
+  const r3 = await postSubmission({ name: 'Marque WH3', url: 'https://wh3.fr' }, 'i'.repeat(32));
+  const { code: c3 } = (await r3.json()) as any;
+
+  const statusOf = async (code: string) =>
+    ((await (await mf.dispatchFetch(`http://worker.test/submissions/${code}`)).json()) as any).status;
+  assert.equal(await statusOf(c1), 'pending');
+
+  // signature invalide → 401
+  const raw = JSON.stringify(prPayload('opened', c1));
+  const bad = await mf.dispatchFetch('http://worker.test/webhooks/github', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'X-GitHub-Event': 'pull_request', 'X-Hub-Signature-256': 'sha256=deadbeef' },
+    body: raw,
+  });
+  assert.equal(bad.status, 401);
+  assert.equal(await statusOf(c1), 'pending');
+
+  // opened → accepted
+  assert.equal((await githubWebhookRequest(mf, prPayload('opened', c1))).status, 200);
+  assert.equal(await statusOf(c1), 'accepted');
+
+  // closed + merged → published
+  assert.equal((await githubWebhookRequest(mf, prPayload('closed', c1, true))).status, 200);
+  assert.equal(await statusOf(c1), 'published');
+
+  // closed sans merge → rejected
+  await githubWebhookRequest(mf, prPayload('opened', c2));
+  assert.equal((await githubWebhookRequest(mf, prPayload('closed', c2, false))).status, 200);
+  assert.equal(await statusOf(c2), 'rejected');
+
+  // branche inconnue → ignoré, 200
+  assert.equal((await githubWebhookRequest(mf, prPayload('opened', 'ZZZZZZZZ'))).status, 200);
+
+  // autre event → ignoré
+  assert.equal((await githubWebhookRequest(mf, { zen: true }, 'whsec', 'ping')).status, 200);
+
+  // c3 non touché
+  assert.equal(await statusOf(c3), 'pending');
+
+  // review_notes trace la PR
+  const queue = (await (await mf.dispatchFetch('http://worker.test/review/api/queue?secret=test-secret')).json()) as any;
+  const s1 = queue.submissions.find((s: any) => s.code === c1);
+  assert.ok(s1.review_notes.includes('PR mergée'), `review_notes: ${s1.review_notes}`);
+});
+
+test('soumission avec GITHUB_TOKEN → PR créée automatiquement, statut accepted', async (t) => {
+  const fetchMock = createFetchMock();
+  fetchMock.disableNetConnect();
+  const gh = fetchMock.get('https://api.github.com');
+  const R = '/repos/EcoCyclea/ecocyclea-content';
+  gh.intercept({ path: `${R}/git/refs/heads/main`, method: 'GET' })
+    .reply(200, { object: { sha: 'main-sha' } }, { headers: { 'content-type': 'application/json' } });
+  gh.intercept({ path: `${R}/git/refs`, method: 'POST' })
+    .reply(201, {}, { headers: { 'content-type': 'application/json' } });
+  const brandsFile = Buffer.from(JSON.stringify({ rubricVersion: '1.0', brands: [] })).toString('base64');
+  gh.intercept({ path: new RegExp(`${R}/contents/content/brands/brands\\.fr-FR\\.json`), method: 'GET' })
+    .reply(200, { sha: 'file-sha', content: brandsFile }, { headers: { 'content-type': 'application/json' } });
+  gh.intercept({ path: `${R}/contents/content/brands/brands.fr-FR.json`, method: 'PUT' })
+    .reply(201, { content: { sha: 'new-sha' } }, { headers: { 'content-type': 'application/json' } });
+  gh.intercept({ path: `${R}/pulls`, method: 'POST' })
+    .reply(201, { html_url: 'https://github.com/EcoCyclea/ecocyclea-content/pull/99' }, { headers: { 'content-type': 'application/json' } });
+
+  const mf4 = new Miniflare({
+    scriptPath: outfile,
+    modulesRoot: outdir,
+    modules: true,
+    d1Databases: ['DB'],
+    kvNamespaces: ['RATE_KV'],
+    fetchMock,
+    bindings: {
+      REVIEW_SECRET: 'test-secret',
+      GITHUB_WEBHOOK_SECRET: 'whsec',
+      GIT_PROVIDER: 'github',
+      GIT_WEB_BASE_URL: 'https://github.com/EcoCyclea/ecocyclea-content',
+      GITHUB_TOKEN: 'ghp_test',
+      RATE_LIMIT_PER_HOUR: '50',
+    },
+  });
+  t.after(() => mf4.dispose());
+  await mf4.ready;
+
+  const res = await mf4.dispatchFetch('http://worker.test/submissions', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      name: 'Marque AutoPR', url: 'https://autopr.fr', category: 'zero-dechet',
+      reason: 'Test de création automatique de PR à la soumission.',
+      antiSpamToken: 'j'.repeat(32),
+    }),
+  });
+  assert.equal(res.status, 201);
+  const { code, status } = (await res.json()) as any;
+  assert.equal(status, 'accepted');
+
+  // statut relu par l'app
+  const st = (await (await mf4.dispatchFetch(`http://worker.test/submissions/${code}`)).json()) as any;
+  assert.equal(st.status, 'accepted');
+
+  // review_notes contient l'URL de la PR
+  const queue = (await (await mf4.dispatchFetch('http://worker.test/review/api/queue?secret=test-secret')).json()) as any;
+  const sub = queue.submissions.find((s: any) => s.code === code);
+  assert.ok(sub.review_notes.includes('pull/99'), `review_notes: ${sub.review_notes}`);
 });

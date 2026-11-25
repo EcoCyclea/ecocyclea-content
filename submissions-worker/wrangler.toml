@@ -21,3 +21,8 @@ GIT_PROVIDER = "github"
 GIT_WEB_BASE_URL = "https://github.com/EcoCyclea/ecocyclea-content"
 RATE_LIMIT_PER_HOUR = 5
 # REVIEW_SECRET est un secret (`wrangler secret put REVIEW_SECRET`), jamais en clair ici.
+# GITHUB_TOKEN idem (`wrangler secret put GITHUB_TOKEN`) : PAT fine-grained limité au dépôt
+# de contenu (contents: read/write) — permet de créer la PR de revue directement
+# (à la soumission et via /review/accept).
+# GITHUB_WEBHOOK_SECRET idem (`wrangler secret put GITHUB_WEBHOOK_SECRET`) : secret du
+# webhook GitHub « Pull request » pointant sur /webhooks/github (synchro des statuts).

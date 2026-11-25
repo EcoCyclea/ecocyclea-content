@@ -23,6 +23,7 @@ export const HEALTH_CATEGORIES = [
   'contraception',
   'depistage-prevention',
   'ist',
+  'endometriose',
   'fertilite-grossesse',
   'menopause',
 ];

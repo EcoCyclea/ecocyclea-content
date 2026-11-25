@@ -35,9 +35,18 @@ export const BRAND_CATEGORIES = [
   'lingerie-soins',
 ];
 
-/** URL de base du CDN (sans slash final). Alimentée par la CI via CDN_BASE_URL. */
+/**
+ * URL de base publique du flux (sans slash final) — UTILISÉE DANS LES URL SIGNÉES
+ * du manifeste. Surchargeable via env CDN_BASE_URL.
+ *
+ * ⚠️ C'EST LE SEUL ENDROIT À CHANGER quand le domaine custom sera actif :
+ * tant que `cdn.ecocyclea.fr` n'existe pas (CNAME vers le bucket R2 non posé chez
+ * le registrar), la valeur par défaut DOIT être l'URL publique R2, sinon les URL
+ * des fichiers signées pointent vers un domaine inexistant et l'app ne télécharge
+ * jamais le contenu (voir OPERATIONS.md §6.3).
+ */
 export const CDN_BASE_URL =
-  (process.env.CDN_BASE_URL || 'https://cdn.ecocyclea.fr').replace(/\/+$/, '');
+  (process.env.CDN_BASE_URL || 'https://pub-4ed0896b10b246d3b0edc068869d7a69.r2.dev').replace(/\/+$/, '');
 
 export function feedUrl(locale, name, version = 'latest') {
   const segment = version === 'latest' ? 'latest' : `versions/${version}`;

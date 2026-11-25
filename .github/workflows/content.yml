@@ -106,7 +106,10 @@ jobs:
       S3_BUCKET: ${{ secrets.S3_BUCKET }}            # ex. ecocyclea-feeds
       S3_ACCESS_KEY_ID: ${{ secrets.S3_ACCESS_KEY_ID }}
       S3_SECRET_ACCESS_KEY: ${{ secrets.S3_SECRET_ACCESS_KEY }}
-      CDN_BASE_URL: ${{ secrets.CDN_BASE_URL }}      # ex. https://cdn.ecocyclea.fr
+      # Sert uniquement à l'echo + purge CDN. Les URL signées du manifeste viennent du
+      # défaut de tools/lib/repo.mjs (job build sans override) : URL publique R2 tant
+      # que le CNAME cdn.ecocyclea.fr n'existe pas.
+      CDN_BASE_URL: ${{ secrets.CDN_BASE_URL }}      # ex. https://pub-4ed0896b10b246d3b0edc068869d7a69.r2.dev
       VERSION: ${{ needs.build.outputs.version }}
     steps:
       - uses: actions/checkout@v4

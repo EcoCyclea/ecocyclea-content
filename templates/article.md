@@ -6,7 +6,7 @@
 # readingMinutes est optionnel : s'il est renseigné, il doit correspondre au
 # calcul automatique (200 mots/min) ; le flux publié utilise la valeur calculée.
 # Toute modification du contenu après validation remet l'article en « draft »
-# jusqu'à nouvelle sign-off du gynécologue partenaire.
+# jusqu'à nouvelle sign-off du médecin partenaire.
 id: art-XXXX
 slug: mon-slug-ici            # doit correspondre au nom du fichier
 category: mon-cycle           # mon-cycle | contraception | depistage-prevention | ist | fertilite-grossesse | menopause
@@ -21,7 +21,7 @@ links:
     source: "Organisme (ex. Assurance Maladie)"
     description: "Pourquoi cette source est fiable et ce qu'elle apporte."
 validatedBy: "Dr Prénom Nom"  # requis si status: published
-validatedByTitle: "Gynécologue-obstétricienne"
+validatedByTitle: "Médecin généraliste spécialisée en santé de la femme"
 validatedAt: "2026-11-21"     # requis si status: published (AAAA-MM-JJ)
 publishedAt: "2026-11-21"
 status: draft

@@ -24,7 +24,7 @@ links:
     source: "Santé publique France"
     description: "Dossier sur les HPV : transmission, cancers associés et politique de vaccination en France."
 validatedBy: "Dr Anne-Julie Verriere"
-validatedByTitle: "Gynécologue-obstétricienne"
+validatedByTitle: "Médecin généraliste spécialisée en santé de la femme"
 validatedAt: "2026-11-24"
 publishedAt: "2026-11-25"
 status: published

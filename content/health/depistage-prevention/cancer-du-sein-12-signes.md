@@ -24,7 +24,7 @@ links:
     source: "Know Your Lemons / Worldwide Breast Cancer"
     description: "Campagne internationale à l'origine de l'image des 12 citrons illustrant les signes du cancer du sein (image ci-dessous)."
 validatedBy: "Dr Anne-Julie Verriere"
-validatedByTitle: "Gynécologue-obstétricienne"
+validatedByTitle: "Médecin généraliste spécialisée en santé de la femme"
 validatedAt: "2026-11-24"
 publishedAt: "2026-11-25"
 status: published

@@ -20,7 +20,7 @@ links:
     source: "Planning Familial"
     description: "Adresse, conseil et délivrance gratuite et anonyme de la contraception d'urgence pour les mineur·es."
 validatedBy: "Dr Anne-Julie Verriere"
-validatedByTitle: "Gynécologue-obstétricienne"
+validatedByTitle: "Médecin généraliste spécialisée en santé de la femme"
 validatedAt: "2026-11-24"
 publishedAt: "2026-11-25"
 status: published
